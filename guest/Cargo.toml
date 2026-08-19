@@ -13,3 +13,6 @@ crate-type = ["cdylib"]
 package = "component:guest"
 
 [package.metadata.component.dependencies]
+
+[package.metadata.component.target.dependencies]
+"wasi:random" = "0.2.3"

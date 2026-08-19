@@ -45,8 +45,117 @@ static mut _RET_AREA: _RetArea = _RetArea(
     [::core::mem::MaybeUninit::uninit(); 2 * ::core::mem::size_of::<*const u8>()],
 );
 #[rustfmt::skip]
+#[allow(dead_code, clippy::all)]
+pub mod wasi {
+    pub mod random {
+        /// WASI Random is a random data API.
+        ///
+        /// It is intended to be portable at least between Unix-family platforms and
+        /// Windows.
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod random {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            /// Return `len` cryptographically-secure random or pseudo-random bytes.
+            ///
+            /// This function must produce data at least as cryptographically secure and
+            /// fast as an adequately seeded cryptographically-secure pseudo-random
+            /// number generator (CSPRNG). It must not block, from the perspective of
+            /// the calling program, under any circumstances, including on the first
+            /// request and on requests for numbers of bytes. The returned data must
+            /// always be unpredictable.
+            ///
+            /// This function must always return fresh data. Deterministic environments
+            /// must omit this function, rather than implementing it with deterministic
+            /// data.
+            pub fn get_random_bytes(len: u64) -> _rt::Vec<u8> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 2 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 2
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:random/random@0.2.12")]
+                    unsafe extern "C" {
+                        #[link_name = "get-random-bytes"]
+                        fn wit_import1(_: i64, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: i64, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import1(_rt::as_i64(&len), ptr0) };
+                    let l2 = *ptr0.add(0).cast::<*mut u8>();
+                    let l3 = *ptr0
+                        .add(::core::mem::size_of::<*const u8>())
+                        .cast::<usize>();
+                    let len4 = l3;
+                    let result5 = _rt::Vec::from_raw_parts(l2.cast(), len4, len4);
+                    result5
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Return a cryptographically-secure random or pseudo-random `u64` value.
+            ///
+            /// This function returns the same type of data as `get-random-bytes`,
+            /// represented as a `u64`.
+            pub fn get_random_u64() -> u64 {
+                unsafe {
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:random/random@0.2.12")]
+                    unsafe extern "C" {
+                        #[link_name = "get-random-u64"]
+                        fn wit_import0() -> i64;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import0() -> i64 {
+                        unreachable!()
+                    }
+                    let ret = unsafe { wit_import0() };
+                    ret as u64
+                }
+            }
+        }
+    }
+}
+#[rustfmt::skip]
 mod _rt {
     #![allow(dead_code, clippy::all)]
+    pub use alloc_crate::vec::Vec;
+    pub fn as_i64<T: AsI64>(t: T) -> i64 {
+        t.as_i64()
+    }
+    pub trait AsI64 {
+        fn as_i64(self) -> i64;
+    }
+    impl<'a, T: Copy + AsI64> AsI64 for &'a T {
+        fn as_i64(self) -> i64 {
+            (*self).as_i64()
+        }
+    }
+    impl AsI64 for i64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
+    impl AsI64 for u64 {
+        #[inline]
+        fn as_i64(self) -> i64 {
+            self as i64
+        }
+    }
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
@@ -59,8 +168,8 @@ mod _rt {
         alloc::dealloc(ptr, layout);
     }
     pub use alloc_crate::string::String;
-    pub use alloc_crate::alloc;
     extern crate alloc as alloc_crate;
+    pub use alloc_crate::alloc;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
 /// the root implementation of all generated traits.
@@ -97,9 +206,11 @@ pub(crate) use __export_example_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 180] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x077\x01A\x02\x01A\x02\x01\
-@\0\0s\x04\0\x0bhello-world\x01\0\x04\0\x17component:guest/example\x04\0\x0b\x0d\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 272] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x92\x01\x01A\x02\x01\
+A\x04\x01B\x05\x01p}\x01@\x01\x03lenw\0\0\x04\0\x10get-random-bytes\x01\x01\x01@\
+\0\0w\x04\0\x0eget-random-u64\x01\x02\x03\0\x19wasi:random/random@0.2.12\x05\0\x01\
+@\0\0s\x04\0\x0bhello-world\x01\x01\x04\0\x17component:guest/example\x04\0\x0b\x0d\
 \x01\0\x07example\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-compone\
 nt\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]

@@ -1,6 +1,7 @@
 #[allow(warnings)]
 mod bindings;
 
+use bindings::wasi::random::random::get_random_u64;
 use bindings::Guest;
 
 struct Component;
@@ -8,7 +9,8 @@ struct Component;
 impl Guest for Component {
     /// Say hello!
     fn hello_world() -> String {
-        "Hello, World!".to_string()
+        let n = get_random_u64();
+        format!("Hello, World! {}", n)
     }
 }
 
