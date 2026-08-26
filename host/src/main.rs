@@ -15,7 +15,7 @@ enum ReplayRandom {
     },
     Replay {
         log: Vec<u64>,
-        pos: usize,
+        pos: Arc<Mutex<usize>>,
     },
 }
 
@@ -30,8 +30,16 @@ impl TryRng for ReplayRandom {
                 Ok(v)
             }
             ReplayRandom::Replay { log, pos } => {
-                let v = log[*pos];
-                *pos += 1;
+                let mut i = pos.lock().unwrap();
+                let v = *log.get(*i).unwrap_or_else(|| {
+                    panic!(
+                        "記録より多くの乱数が要求されました（記録: {} 件、{} 回目の要求）。\
+                         記録時と再生時でコードが変わっていませんか？",
+                        log.len(),
+                        *i + 1
+                    )
+                });
+                *i += 1;
                 Ok(v)
             }
         }
@@ -72,6 +80,9 @@ fn main() -> Result<()> {
     // 記録モードのときだけ使う共有の箱
     let recorded = Arc::new(Mutex::new(Vec::<u64>::new()));
 
+    let consumed = Arc::new(Mutex::new(0usize));
+    let mut total = 0usize;
+
     let rng = match mode.as_str() {
         "record" => ReplayRandom::Record {
             inner: rand::rngs::StdRng::from_rng(&mut rand::rng()),
@@ -83,7 +94,11 @@ fn main() -> Result<()> {
                 .lines()
                 .map(|line| line.trim().parse::<u64>())
                 .collect::<std::result::Result<Vec<u64>, _>>()?;
-            ReplayRandom::Replay { log, pos: 0 }
+            total = log.len();
+            ReplayRandom::Replay {
+                log,
+                pos: Arc::clone(&consumed),
+            }
         }
         other => anyhow::bail!(
             "使い方: cargo run -p host -- <record|replay> (受け取った引数: {other:?})"
@@ -124,6 +139,16 @@ fn main() -> Result<()> {
             .join("\n");
         std::fs::write(log_path, text)?;
         println!("記録しました: {} 件 -> {}", values.len(), log_path);
+    }
+
+    if mode == "replay" {
+        let used = *consumed.lock().unwrap();
+        if used < total {
+            eprintln!(
+                "警告: ログを使い切っていません（{used} / {total} 件）。\
+                 記録時とコードが違う可能性があります。"
+            );
+        }
     }
 
     Ok(())

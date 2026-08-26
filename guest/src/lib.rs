@@ -9,8 +9,9 @@ struct Component;
 impl Guest for Component {
     /// Say hello!
     fn hello_world() -> String {
-        let n = get_random_u64();
-        format!("Hello, World! {}", n)
+        let a = get_random_u64();
+        let b = get_random_u64();
+        format!("Hello, World! {} {}", a, b)
     }
 }
 
