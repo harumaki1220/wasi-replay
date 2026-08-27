@@ -47,6 +47,116 @@ static mut _RET_AREA: _RetArea = _RetArea(
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod wasi {
+    pub mod clocks {
+        /// WASI Wall Clock is a clock API intended to let users query the current
+        /// time. The name "wall" makes an analogy to a "clock on the wall", which
+        /// is not necessarily monotonic as it may be reset.
+        ///
+        /// It is intended to be portable at least between Unix-family platforms and
+        /// Windows.
+        ///
+        /// A wall clock is a clock which measures the date and time according to
+        /// some external reference.
+        ///
+        /// External references may be reset, so this clock is not necessarily
+        /// monotonic, making it unsuitable for measuring elapsed time.
+        ///
+        /// It is intended for reporting the current date and time for humans.
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod wall_clock {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            /// A time and date in seconds plus nanoseconds.
+            #[repr(C)]
+            #[derive(Clone, Copy)]
+            pub struct Datetime {
+                pub seconds: u64,
+                pub nanoseconds: u32,
+            }
+            impl ::core::fmt::Debug for Datetime {
+                fn fmt(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.debug_struct("Datetime")
+                        .field("seconds", &self.seconds)
+                        .field("nanoseconds", &self.nanoseconds)
+                        .finish()
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Read the current value of the clock.
+            ///
+            /// This clock is not monotonic, therefore calling this function repeatedly
+            /// will not necessarily produce a sequence of non-decreasing values.
+            ///
+            /// The returned timestamps represent the number of seconds since
+            /// 1970-01-01T00:00:00Z, also known as [POSIX's Seconds Since the Epoch],
+            /// also known as [Unix Time].
+            ///
+            /// The nanoseconds field of the output is always less than 1000000000.
+            ///
+            /// [POSIX's Seconds Since the Epoch]: https://pubs.opengroup.org/onlinepubs/9699919799/xrat/V4_xbd_chap04.html#tag_21_04_16
+            /// [Unix Time]: https://en.wikipedia.org/wiki/Unix_time
+            pub fn now() -> Datetime {
+                unsafe {
+                    #[repr(align(8))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/wall-clock@0.2.12")]
+                    unsafe extern "C" {
+                        #[link_name = "now"]
+                        fn wit_import1(_: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import1(ptr0) };
+                    let l2 = *ptr0.add(0).cast::<i64>();
+                    let l3 = *ptr0.add(8).cast::<i32>();
+                    let result4 = Datetime {
+                        seconds: l2 as u64,
+                        nanoseconds: l3 as u32,
+                    };
+                    result4
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            /// Query the resolution of the clock.
+            ///
+            /// The nanoseconds field of the output is always less than 1000000000.
+            pub fn resolution() -> Datetime {
+                unsafe {
+                    #[repr(align(8))]
+                    struct RetArea([::core::mem::MaybeUninit<u8>; 16]);
+                    let mut ret_area = RetArea([::core::mem::MaybeUninit::uninit(); 16]);
+                    let ptr0 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "wasi:clocks/wall-clock@0.2.12")]
+                    unsafe extern "C" {
+                        #[link_name = "resolution"]
+                        fn wit_import1(_: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import1(_: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import1(ptr0) };
+                    let l2 = *ptr0.add(0).cast::<i64>();
+                    let l3 = *ptr0.add(8).cast::<i32>();
+                    let result4 = Datetime {
+                        seconds: l2 as u64,
+                        nanoseconds: l3 as u32,
+                    };
+                    result4
+                }
+            }
+        }
+    }
     pub mod random {
         /// WASI Random is a random data API.
         ///
@@ -206,13 +316,15 @@ pub(crate) use __export_example_impl as export;
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 272] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x92\x01\x01A\x02\x01\
-A\x04\x01B\x05\x01p}\x01@\x01\x03lenw\0\0\x04\0\x10get-random-bytes\x01\x01\x01@\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 376] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xfa\x01\x01A\x02\x01\
+A\x06\x01B\x05\x01p}\x01@\x01\x03lenw\0\0\x04\0\x10get-random-bytes\x01\x01\x01@\
 \0\0w\x04\0\x0eget-random-u64\x01\x02\x03\0\x19wasi:random/random@0.2.12\x05\0\x01\
-@\0\0s\x04\0\x0bhello-world\x01\x01\x04\0\x17component:guest/example\x04\0\x0b\x0d\
-\x01\0\x07example\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-compone\
-nt\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+B\x05\x01r\x02\x07secondsw\x0bnanosecondsy\x04\0\x08datetime\x03\0\0\x01@\0\0\x01\
+\x04\0\x03now\x01\x02\x04\0\x0aresolution\x01\x02\x03\0\x1dwasi:clocks/wall-cloc\
+k@0.2.12\x05\x01\x01@\0\0s\x04\0\x0bhello-world\x01\x02\x04\0\x17component:guest\
+/example\x04\0\x0b\x0d\x01\0\x07example\x03\0\0\0G\x09producers\x01\x0cprocessed\
+-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

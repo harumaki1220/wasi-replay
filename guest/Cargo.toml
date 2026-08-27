@@ -16,3 +16,4 @@ package = "component:guest"
 
 [package.metadata.component.target.dependencies]
 "wasi:random" = "0.2.3"
+"wasi:clocks" = "0.2.12"

@@ -3,6 +3,14 @@
 version = 1
 
 [[package]]
+name = "wasi:clocks"
+
+[[package.version]]
+requirement = "^0.2.12"
+version = "0.2.12"
+digest = "sha256:29e94d379b2239df6bc23cdfc6232dc69ffeb7cc236349fab2244803c323d92b"
+
+[[package]]
 name = "wasi:random"
 
 [[package.version]]

@@ -3,6 +3,7 @@ package component:guest;
 /// An example world for the component to target.
 world example {
     import wasi:random/random@0.2.12;
+    import wasi:clocks/wall-clock@0.2.12;
 
     export hello-world: func() -> string;
 }
