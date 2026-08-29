@@ -9,6 +9,8 @@ use wasmtime_wasi::{
     HostMonotonicClock, HostWallClock, WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView,
 };
 
+mod tape;
+
 // 台帳 (Tape)
 // 乱数・実時刻・単調時刻の3つが、この1本の台帳を共有する。
 // 呼ばれた順番がそのまま行の順番になるので、
