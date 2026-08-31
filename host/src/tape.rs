@@ -26,8 +26,33 @@ impl Value {
     }
 
     fn parse(s: &str) -> Result<Value> {
-        let n = s.trim().parse::<u64>()?;
-        Ok(Value::U64(n))
+        if s.starts_with("datetime") {
+            let open = s
+                .find('{')
+                .ok_or_else(|| anyhow::anyhow!("{{ が見つかりません"))?;
+            let close = s
+                .find('}')
+                .ok_or_else(|| anyhow::anyhow!("}} が見つかりません"))?;
+            let inner = &s[open + 1..close];
+            let (a, b) = inner
+                .split_once(',')
+                .ok_or_else(|| anyhow::anyhow!("カンマがありません"))?;
+            let (_, sec_str) = a
+                .split_once(':')
+                .ok_or_else(|| anyhow::anyhow!("seconds の : がありません"))?;
+            let seconds = sec_str.trim().parse::<u64>()?;
+            let (_, nano_str) = b
+                .split_once(':')
+                .ok_or_else(|| anyhow::anyhow!("nanoseconds の : がありません"))?;
+            let nanoseconds = nano_str.trim().parse::<u32>()?;
+            Ok(Value::Datetime {
+                seconds,
+                nanoseconds,
+            })
+        } else {
+            let n = s.trim().parse::<u64>()?;
+            Ok(Value::U64(n))
+        }
     }
 }
 
@@ -85,5 +110,29 @@ mod tests {
     #[test]
     fn parse_u64() {
         assert_eq!(Value::parse("42").unwrap(), Value::U64(42));
+    }
+
+    #[test]
+    fn parse_datetime() {
+        let s = "datetime { seconds: 1787837699, nanoseconds: 250915580 }";
+        assert_eq!(
+            Value::parse(s).unwrap(),
+            Value::Datetime {
+                seconds: 1787837699,
+                nanoseconds: 250915580
+            }
+        );
+    }
+
+    #[test]
+    fn roundtrip() {
+        let v = Value::Datetime {
+            seconds: 1787837699,
+            nanoseconds: 250915580,
+        };
+        assert_eq!(Value::parse(&v.to_text()).unwrap(), v);
+
+        let v = Value::U64(42);
+        assert_eq!(Value::parse(&v.to_text()).unwrap(), v);
     }
 }
